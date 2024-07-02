@@ -121,17 +121,7 @@ void Shell::init()
 
     vars.set("status", "0");
 
-    ifstream file("/home/fabian/.config/shell/init");
-
-    if (file.is_open())
-    {
-        string line;
-
-        while (getline(file, line))
-            execute(line);
-
-        file.close();
-    }
+    execute("test -f ~/.config/shell/init && ~/.config/shell/init");
 }
 
 vector<string> Shell::get_sub_lines(const string& input)
