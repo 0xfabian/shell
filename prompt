@@ -1,0 +1,35 @@
+#!/home/fabian/shell/sh
+
+set reset   \e[0m
+set gray    \e[90m
+set red     \e[91m
+set green   \e[92m
+set yellow  \e[93m
+set blue    \e[94m
+set magenta \e[95m
+set cyan    \e[96m
+set white   \e[97m
+
+set date (date +%H:%M)
+set pwd (printf $PWD | sed s:$HOME:\~:g)
+
+# --------------------------------
+
+printf $gray[
+printf $blue$date
+printf $gray:
+printf $green$USER
+printf $gray:
+printf $yellow$pwd
+
+() | exit $1 || printf $gray:$red$1
+
+printf $gray]
+printf $reset\n>\ 
+
+# --------------------------------
+
+# set slash $red
+# set dir $blue
+
+# printf $dir$pwd$slash>$reset\  | sed s:/:$slash/$dir:g

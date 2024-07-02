@@ -1,0 +1,7 @@
+#!/home/fabian/shell/sh
+
+alias ls 'ls --color=auto'
+alias grep 'grep --color=auto'
+alias lines 'printf %s\n'
+
+set prompt '~/.config/shell/prompt $status'
