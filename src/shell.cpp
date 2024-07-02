@@ -121,7 +121,21 @@ void Shell::init()
 
     vars.set("status", "0");
 
-    execute("test -f ~/.config/shell/init && ~/.config/shell/init");
+    const char* home = getenv("HOME");
+
+    if (home)
+    {
+        ifstream file(string(home) + "/.config/shell/init");
+        string line;
+
+        if (file.is_open())
+        {
+            while (getline(file, line))
+                execute(line);
+
+            file.close();
+        }
+    }
 }
 
 vector<string> Shell::get_sub_lines(const string& input)
