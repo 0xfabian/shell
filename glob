@@ -1,0 +1,3 @@
+#!/home/fabian/shell/sh
+
+bash -c 'printf %s\\n '$1

@@ -719,7 +719,8 @@ int Shell::__set(int argc, char** argv)
     if (argc == 1)
     {
         for (const auto& pair : vars.data)
-            cout << pair.first << " = " << pair.second << "\n";
+            if (!vars.is_exported(pair.first))
+                cout << pair.first << " = " << pair.second << "\e[0m\n";
     }
     else if (argc == 2)
         vars.set(argv[1], "");
