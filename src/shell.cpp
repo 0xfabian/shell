@@ -62,6 +62,8 @@ void Shell::execute(string input, bool save_status)
     }
     catch (const runtime_error& e)
     {
+        // can catch pipe failed
+
         cout << start_input << endl;
 
         for (int i = 0; i < start_input.size() - input.size(); i++)
