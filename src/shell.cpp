@@ -6,10 +6,12 @@ void Shell::run()
 {
     while (true)
     {
+        string input;
+
         prompt();
 
-        string input;
-        getline(cin, input);
+        if (!getline(cin, input))
+            execute("echo exit ; exit");
 
         execute(input);
     }
