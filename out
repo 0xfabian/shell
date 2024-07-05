@@ -1,3 +1,0 @@
-#!/home/fabian/shell/sh
-
-tee $1 | sed 'd'
