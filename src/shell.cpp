@@ -6,14 +6,12 @@ void Shell::run()
 {
     while (true)
     {
-        string input;
-
         prompt();
 
-        if (!getline(cin, input))
+        if (!input.get())
             execute("echo exit ; exit");
 
-        execute(input);
+        execute(input.data);
     }
 }
 
@@ -95,6 +93,40 @@ void Shell::sync_vars()
     }
 }
 
+void Shell::add_history(string str)
+{
+    if (!history.empty() && str == history.back())
+        return;
+
+    int hist_size = 100;
+    string hist_size_str;
+
+    if (vars.get("HISTSIZE", hist_size_str))
+    {
+        try
+        {
+            hist_size = stoi(hist_size_str);
+        }
+        catch (...)
+        {
+
+        }
+    }
+
+    if (history.size() >= hist_size)
+        history.erase(history.begin());
+
+    history.push_back(str);
+}
+
+std::string Shell::get_history(int index)
+{
+    if (index < 0 || index >= history.size())
+        return "";
+
+    return history[history.size() - index - 1];
+}
+
 void Shell::prompt()
 {
     string prompt;
@@ -116,6 +148,7 @@ void Shell::init()
     ADD_BUILTIN(export);
     ADD_BUILTIN(alias);
     ADD_BUILTIN(unalias);
+    ADD_BUILTIN(history);
 
     sync_vars();
 
@@ -775,6 +808,26 @@ int Shell::__unalias(int argc, char** argv)
 {
     if (argc == 2)
         return !aliases.unset(argv[1]);
+
+    return 0;
+}
+
+int Shell::__history(int argc, char** argv)
+{
+    if (argc == 1)
+    {
+        int max_size = to_string(history.size()).size();
+
+        for (int i = 0; i < history.size(); i++)
+        {
+            string num = to_string(history.size() - i);
+            num = string(max_size - num.size(), ' ') + num;
+
+            cout << "  " << num << "  " << history[i] << endl;
+        }
+    }
+    else if (argc == 2 && string(argv[1]) == "-c")
+        history.clear();
 
     return 0;
 }

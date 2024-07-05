@@ -11,6 +11,7 @@
 #include <vars.h>
 #include <alias.h>
 #include <parser.h>
+#include <input.h>
 
 struct Shell
 {
@@ -20,14 +21,18 @@ struct Shell
     Vars vars;
     Aliases aliases;
     std::unordered_map < std::string, std::function<int(int, char**)>> builtins;
+    std::vector<std::string> history;
+    Input input{ this };
 
-    Shell(const std::string& _name) : name(_name) {}
+    Shell(const std::string& _name) : name(_name) {};
 
     void run();
     void run_file(int argc, char** argv);
     void execute(std::string input, bool save_status = true);
 
     void sync_vars();
+    void add_history(std::string str);
+    std::string get_history(int index);
     void prompt();
     void init();
 
@@ -54,4 +59,5 @@ struct Shell
     int __export(int argc, char** argv);
     int __alias(int argc, char** argv);
     int __unalias(int argc, char** argv);
+    int __history(int argc, char** argv);
 };
