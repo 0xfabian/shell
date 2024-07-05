@@ -34,11 +34,15 @@ struct Input
     Shell* sh;
     std::string data;
     std::string backup;
+    std::string suggestion;
 
     size_t cursor;
     size_t selection_anchor;
     bool selection;
     int hist_index = -1;
+
+    int last_render_size;
+    size_t last_cursor;
 
     Input(Shell* _sh) : sh(_sh) {};
 
@@ -55,6 +59,7 @@ struct Input
 
     void enter();
 
+    void find_suggestion();
     void autocomplete();
 
     void move_home(bool shift);
@@ -71,5 +76,5 @@ struct Input
 
     void select_all();
 
-    void render(size_t old_cursor, size_t old_size);
+    void render();
 };

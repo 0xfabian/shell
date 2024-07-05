@@ -9,9 +9,14 @@ bool Input::get()
 
     data.clear();
     backup.clear();
+    suggestion.clear();
+
     cursor = 0;
     selection = false;
     hist_index = -1;
+
+    last_render_size = 0;
+    last_cursor = 0;
 
     int res;
     while ((res = process_key()) > 0);
@@ -23,9 +28,6 @@ bool Input::get()
 
 int Input::process_key()
 {
-    size_t old_cursor = cursor;
-    size_t old_size = data.size();
-
     int key = get_key();
 
     if (isprint(key))
@@ -62,7 +64,11 @@ int Input::process_key()
         }
     }
 
-    render(old_cursor, old_size);
+    if (selection && cursor == selection_anchor)
+        selection = false;
+
+    find_suggestion();
+    render();
 
     return 1;
 }
@@ -130,9 +136,41 @@ void Input::enter()
     cout << endl;
 }
 
+bool starts_with(const string& str, const string& prefix)
+{
+    if (prefix.length() > str.length())
+        return false;
+
+    return str.compare(0, prefix.length(), prefix) == 0;
+}
+
+void Input::find_suggestion()
+{
+    if (!data.empty())
+    {
+        for (int i = sh->history.size() - 1; i >= 0; i--)
+        {
+            if (starts_with(sh->history[i], data))
+            {
+                suggestion = sh->history[i];
+                return;
+            }
+        }
+    }
+
+    suggestion = "";
+}
+
 void Input::autocomplete()
 {
+    if (suggestion.empty())
+        return;
 
+    hist_index = -1;
+
+    data = suggestion;
+    selection = false;
+    cursor = data.size();
 }
 
 void Input::move_home(bool shift)
@@ -254,41 +292,35 @@ void Input::select_all()
     cursor = data.size();
 }
 
-void Input::render(size_t old_cursor, size_t old_size)
+void Input::render()
 {
-    if (selection && cursor == selection_anchor)
-        selection = false;
-
     size_t sel_start = cursor < selection_anchor ? cursor : selection_anchor;
     size_t sel_end = cursor > selection_anchor ? cursor : selection_anchor;
 
-    cursor_move_left(old_cursor);
+    cursor_move_left(last_cursor);
 
-    cout << "\e[0m";
+    cout << "\e[0m" << string(last_render_size, ' ');
 
-    for (int i = 0; i < data.size(); i++)
-    {
-        if (selection)
-        {
-            if (i == sel_start)
-                cout << "\e[44m";
+    cursor_move_left(last_render_size);
 
-            if (i == sel_end)
-                cout << "\e[0m";
-        }
+    int render_size = suggestion.size() > data.size() ? suggestion.size() : data.size();
 
-        cout << data[i];
-    }
+    string output;
 
-    if (old_size > data.size())
-    {
-        for (int i = 0; i < old_size - data.size(); i++)
-            cout << " ";
-
-        cursor_move_left(old_size - cursor);
-    }
+    if (selection)
+        output = data.substr(0, sel_start) + "\e[44;96m" + data.substr(sel_start, sel_end - sel_start) + "\e[0m" + data.substr(sel_end);
     else
-        cursor_move_left(data.size() - cursor);
+        output = data;
+
+    if (suggestion.size() > data.size())
+        output += "\e[0m\e[38;5;242m" + suggestion.substr(data.size());
+
+    cout << output;
+
+    cursor_move_left(render_size - cursor);
+
+    last_render_size = render_size;
+    last_cursor = cursor;
 }
 
 int Input::get_key()
