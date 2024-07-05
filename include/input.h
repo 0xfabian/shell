@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <dirent.h>
 #include <terminal.h>
 
 #define CTRL_KEY(key) ((key) & 0x1f)

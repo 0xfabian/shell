@@ -144,21 +144,98 @@ bool starts_with(const string& str, const string& prefix)
     return str.compare(0, prefix.length(), prefix) == 0;
 }
 
+vector<string> list_dir(const string& path)
+{
+    vector<string> ret;
+
+    DIR* dir = opendir(path.c_str());
+
+    if (dir != 0)
+    {
+        dirent* entry;
+
+        while ((entry = readdir(dir)) != NULL)
+        {
+            string name = string(entry->d_name);
+
+            if (entry->d_type == DT_DIR)
+                name += '/';
+
+            ret.push_back(name);
+        }
+
+        closedir(dir);
+    }
+
+    return ret;
+}
+
 void Input::find_suggestion()
 {
-    if (!data.empty())
-    {
-        for (int i = sh->history.size() - 1; i >= 0; i--)
+    suggestion.clear();
+
+    if (data.empty())
+        return;
+
+    for (int i = sh->history.size() - 1; i >= 0; i--)
+        if (starts_with(sh->history[i], data))
         {
-            if (starts_with(sh->history[i], data))
+            suggestion = sh->history[i];
+            return;
+        }
+
+    string word = data;
+    size_t pos = data.rfind(' ');
+
+    if (pos != string::npos)
+        word = data.substr(pos + 1);
+
+    if (word.empty() || word.back() == '/' || word.back() == '$')
+        return;
+
+    pos = word.rfind('$');
+
+    if (pos != string::npos)
+    {
+        word = word.substr(pos + 1);
+
+        for (const auto& pair : sh->vars.data)
+            if (starts_with(pair.first, word))
             {
-                suggestion = sh->history[i];
-                return;
+                suggestion = data.substr(0, data.size() - word.size()) + pair.first;
+                break;
             }
+
+        return;
+    }
+
+    string path;
+    pos = word.rfind('/');
+
+    if (pos == string::npos)
+        path = ".";
+    else
+    {
+        path = word.substr(0, pos + 1);
+        word = word.substr(pos + 1);
+
+        if (starts_with(path, "~/"))
+        {
+            string home;
+            sh->vars.get("HOME", home);
+
+            path = home + path.substr(1);
         }
     }
 
-    suggestion = "";
+    vector<string> entries = list_dir(path);
+
+    for (const auto& entry : entries)
+        if (starts_with(entry, word))
+        {
+            suggestion = data.substr(0, data.size() - word.size()) + entry;
+            return;
+        }
 }
 
 void Input::autocomplete()
@@ -313,7 +390,7 @@ void Input::render()
         output = data;
 
     if (suggestion.size() > data.size())
-        output += "\e[0m\e[38;5;242m" + suggestion.substr(data.size());
+        output += "\e[0m\e[38;5;240m" + suggestion.substr(data.size());
 
     cout << output;
 
