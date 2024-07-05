@@ -15,17 +15,16 @@ set pwd (printf $PWD | sed s:$HOME:\~:g)
 
 # --------------------------------
 
-printf $gray[
+printf \n$gray┌[
 printf $blue$date
-printf $gray:
+printf \ 
 printf $green$USER
-printf $gray:
+printf \ 
 printf $yellow$pwd
 
-() | exit $1 || printf $gray:$red$1
+() | exit $1 || printf \ $red$1
 
-printf $gray]
-printf $reset\n>\ 
+printf $gray]\n└─►\ $reset
 
 # --------------------------------
 
