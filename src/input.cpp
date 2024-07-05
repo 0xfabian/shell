@@ -390,7 +390,7 @@ void Input::render()
         output = data;
 
     if (suggestion.size() > data.size())
-        output += "\e[0m\e[38;5;240m" + suggestion.substr(data.size());
+        output += "\e[0m\e[38;5;240m" + suggestion.substr(data.size()) + "\e[0m";
 
     cout << output;
 
