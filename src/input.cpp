@@ -375,30 +375,35 @@ void Input::select_all()
 
 void Input::render()
 {
-    size_t sel_start = cursor < selection_anchor ? cursor : selection_anchor;
-    size_t sel_end = cursor > selection_anchor ? cursor : selection_anchor;
+    int render_size = suggestion.size() > data.size() ? suggestion.size() : data.size();
+    int end = render_size;
+
+    string output = "\e[0m" + data;
+
+    if (selection)
+    {
+        size_t sel_start = cursor < selection_anchor ? cursor : selection_anchor;
+        size_t sel_end = cursor > selection_anchor ? cursor : selection_anchor;
+
+        output = "\e[0m" + data.substr(0, sel_start);
+        output += "\e[44;96m" + data.substr(sel_start, sel_end - sel_start);
+        output += "\e[0m" + data.substr(sel_end);
+    }
+
+    if (suggestion.size() > data.size())
+        output += "\e[0m\e[38;5;240m" + suggestion.substr(data.size());
+
+    if (last_render_size > render_size)
+    {
+        output += +"\e[0m" + string(last_render_size - render_size, ' ');
+        end = last_render_size;
+    }
 
     cursor_move_left(last_cursor);
 
-    cout << "\e[0m" << string(last_render_size, ' ');
-
-    cursor_move_left(last_render_size);
-
-    int render_size = suggestion.size() > data.size() ? suggestion.size() : data.size();
-
-    string output;
-
-    if (selection)
-        output = data.substr(0, sel_start) + "\e[44;96m" + data.substr(sel_start, sel_end - sel_start) + "\e[0m" + data.substr(sel_end);
-    else
-        output = data;
-
-    if (suggestion.size() > data.size())
-        output += "\e[0m\e[38;5;240m" + suggestion.substr(data.size()) + "\e[0m";
-
     cout << output;
 
-    cursor_move_left(render_size - cursor);
+    cursor_move_left(end - cursor);
 
     last_render_size = render_size;
     last_cursor = cursor;
