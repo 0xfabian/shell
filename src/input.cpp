@@ -133,6 +133,10 @@ void Input::enter()
 {
     sh->add_history(data);
 
+    suggestion.clear();
+
+    render();
+
     cout << endl;
 }
 
