@@ -35,11 +35,3 @@ void cursor_move_left(int steps)
 
     printf("\e[%dD", steps);
 }
-
-void cursor_move_right(int steps)
-{
-    if (steps == 0)
-        return;
-
-    printf("\e[%dC", steps);
-}

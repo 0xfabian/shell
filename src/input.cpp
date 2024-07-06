@@ -60,7 +60,14 @@ int Input::process_key()
         case SHIFT_CTRL_ARROW_LEFT:     move_left(true, true);      break;
 
         case CTRL_KEY('a'):             select_all();               break;
-        case CTRL_KEY('d'):                                         return -1;
+        case CTRL_KEY('d'):
+            if (data.empty())
+                return -1;
+            else
+            {
+                delete_();
+                break;
+            }
         }
     }
 
@@ -131,13 +138,14 @@ void Input::test_selection(bool shift)
 
 void Input::enter()
 {
-    sh->add_history(data);
-
+    selection = false;
     suggestion.clear();
 
     render();
 
     cout << endl;
+
+    sh->add_history(data);
 }
 
 bool starts_with(const string& str, const string& prefix)
@@ -401,7 +409,7 @@ void Input::render()
 
     cursor_move_left(last_cursor);
 
-    cout << output;
+    cout << output << flush;
 
     cursor_move_left(end - cursor);
 
