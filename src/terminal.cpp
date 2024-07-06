@@ -41,10 +41,11 @@ void set_cursor(size_t pos)
 
 size_t get_cursor()
 {
+    if (write(STDOUT_FILENO, "\e[6n", 4) != 4)
+        return 0;
+
     char buf[32];
     int i = 0;
-
-    write(STDOUT_FILENO, "\e[6n", 4);
 
     while (i < sizeof(buf) - 1)
     {
