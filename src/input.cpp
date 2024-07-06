@@ -11,6 +11,7 @@ bool Input::get()
     backup.clear();
     suggestion.clear();
 
+    input_anchor = get_cursor();
     cursor = 0;
     selection = false;
     hist_index = -1;
@@ -190,7 +191,7 @@ void Input::find_suggestion()
         return;
 
     for (int i = sh->history.size() - 1; i >= 0; i--)
-        if (starts_with(sh->history[i], data))
+        if (starts_with(sh->history[i], data) && sh->history[i] != data)
         {
             suggestion = sh->history[i];
             return;
@@ -384,7 +385,7 @@ void Input::select_all()
 void Input::render()
 {
     int render_size = suggestion.size() > data.size() ? suggestion.size() : data.size();
-    int end = render_size;
+    int output_size = render_size;
 
     string output = "\e[0m" + data;
 
@@ -398,20 +399,28 @@ void Input::render()
         output += "\e[0m" + data.substr(sel_end);
     }
 
-    if (suggestion.size() > data.size())
+    if (!suggestion.empty())
         output += "\e[0m\e[38;5;240m" + suggestion.substr(data.size());
 
     if (last_render_size > render_size)
     {
-        output += +"\e[0m" + string(last_render_size - render_size, ' ');
-        end = last_render_size;
+        output += "\e[0m" + string(last_render_size - render_size, ' ');
+        output_size = last_render_size;
     }
+    else if (suggestion.empty())
+        output += " ";
 
-    cursor_move_left(last_cursor);
+    // for some reason when the cursor is at the end of the line
+    // it prints the character but doesn't move to next line
+    // even though set_cursor has the correct value
+    // so print a space in order to move it
+
+    set_cursor(input_anchor);
 
     cout << output << flush;
 
-    cursor_move_left(end - cursor);
+    ajust_for_scroll(&input_anchor, output_size - (suggestion.empty() ? 0 : 1));
+    set_cursor(input_anchor + cursor);
 
     last_render_size = render_size;
     last_cursor = cursor;

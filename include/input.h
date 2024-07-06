@@ -37,6 +37,7 @@ struct Input
     std::string backup;
     std::string suggestion;
 
+    size_t input_anchor;
     size_t cursor;
     size_t selection_anchor;
     bool selection;

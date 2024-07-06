@@ -28,10 +28,54 @@ void tty_restore()
         perror("tty_restore: tcsetattr");
 }
 
-void cursor_move_left(int steps)
+void set_cursor(size_t pos)
 {
-    if (steps == 0)
-        return;
+    struct winsize size;
+    ioctl(STDIN_FILENO, TIOCGWINSZ, &size);
 
-    printf("\e[%dD", steps);
+    int line = pos / size.ws_col + 1;
+    int column = pos % size.ws_col + 1;
+
+    printf("\e[%d;%dH", line, column);
+}
+
+size_t get_cursor()
+{
+    char buf[32];
+    int i = 0;
+
+    write(STDOUT_FILENO, "\e[6n", 4);
+
+    while (i < sizeof(buf) - 1)
+    {
+        if (read(STDIN_FILENO, &buf[i], 1) != 1)
+            break;
+
+        if (buf[i] == 'R')
+            break;
+
+        i++;
+    }
+
+    buf[i] = '\0';
+
+    int line, column;
+
+    sscanf(&buf[2], "%d;%d", &line, &column);
+
+    struct winsize size;
+    ioctl(STDIN_FILENO, TIOCGWINSZ, &size);
+
+    return size.ws_col * (line - 1) + (column - 1);
+}
+
+void ajust_for_scroll(size_t* anchor, size_t offset)
+{
+    struct winsize size;
+    ioctl(STDIN_FILENO, TIOCGWINSZ, &size);
+
+    int line = (*anchor + offset) / size.ws_col + 1;
+
+    if (line > size.ws_row)
+        *anchor -= (line - size.ws_row) * size.ws_col;
 }
