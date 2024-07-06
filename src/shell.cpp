@@ -95,6 +95,9 @@ void Shell::sync_vars()
 
 void Shell::add_history(string str)
 {
+    if (str.empty())
+        return;
+
     if (!history.empty() && str == history.back())
         return;
 
