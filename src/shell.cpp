@@ -135,7 +135,7 @@ void Shell::prompt()
     string prompt;
 
     if (!vars.get("prompt", prompt))
-        cout << "> ";
+        cout << "> " << flush;
     else
         execute(prompt, false);
 }
