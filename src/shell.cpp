@@ -312,9 +312,6 @@ vector<AST_ptr> Shell::expand_word(const AST_ptr& word)
                 ret.back()->children.push_back(make_unique<AST>(child->type, child->data));
     }
 
-    // if (ret.empty())
-    //     ret.push_back(make_unique<AST>(AST::WORD, ""));
-
     return ret;
 }
 
