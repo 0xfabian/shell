@@ -343,7 +343,7 @@ void Input::move_left(bool ctrl, bool shift)
 
 void Input::history_up()
 {
-    if (hist_index == sh->history.size() - 1)
+    if (hist_index == static_cast<int>(sh->history.size()) - 1)
         return;
 
     if (hist_index == -1)

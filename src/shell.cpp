@@ -66,7 +66,7 @@ void Shell::execute(string input, bool save_status)
 
         cout << start_input << endl;
 
-        for (int i = 0; i < start_input.size() - input.size(); i++)
+        for (size_t i = 0; i < start_input.size() - input.size(); i++)
             cout << " ";
 
         cout << "^\n";
@@ -101,7 +101,7 @@ void Shell::add_history(string str)
     if (!history.empty() && str == history.back())
         return;
 
-    int hist_size = 100;
+    size_t hist_size = 100;
     string hist_size_str;
 
     if (vars.get("HISTSIZE", hist_size_str))
@@ -122,9 +122,9 @@ void Shell::add_history(string str)
     history.push_back(str);
 }
 
-std::string Shell::get_history(int index)
+std::string Shell::get_history(size_t index)
 {
-    if (index < 0 || index >= history.size())
+    if (index >= history.size())
         return "";
 
     return history[history.size() - index - 1];
@@ -292,7 +292,7 @@ vector<AST_ptr> Shell::expand_word(const AST_ptr& word)
 {
     vector<vector<string>> results;
 
-    for (int i = 0; i < word->children.size(); i++)
+    for (size_t i = 0; i < word->children.size(); i++)
         if (word->children[i]->type == AST::SUBCOMMAND)
             results.push_back(get_sub_lines(word->children[i]->data));
 
@@ -361,7 +361,7 @@ void Shell::sub_commands(AST_ptr& tree)
 
                 tree->children.erase(tree->children.begin());
 
-                for (int i = 0; i < words.size(); i++)
+                for (size_t i = 0; i < words.size(); i++)
                     tree->children.insert(tree->children.begin() + i, make_unique<AST>(AST::WORD, words[i]));
             }
 
@@ -463,7 +463,7 @@ int Shell::execute_pipeline(const AST_ptr& pipeline)
         if (pipe(fds) == -1)
             throw runtime_error("pipe failed");
 
-    for (int i = 0; i < n; i++)
+    for (size_t i = 0; i < n; i++)
     {
         pid_t pid = fork();
 
@@ -489,8 +489,8 @@ int Shell::execute_pipeline(const AST_ptr& pipeline)
 
             exec_and_exit(argc, argv);
         }
-        else if (pid > 0 && i == n - 1)
-            last_pid = pid;
+
+        last_pid = pid;
     }
 
     for (const auto& fds : pipes)
@@ -502,7 +502,7 @@ int Shell::execute_pipeline(const AST_ptr& pipeline)
     int status;
     int last_status = 0;
 
-    for (int i = 0; i < n; i++)
+    for (size_t i = 0; i < n; i++)
     {
         pid_t pid = wait(&status);
 
@@ -552,26 +552,6 @@ bool Shell::is_executable(const string& name)
     return false;
 }
 
-bool Shell::is_script(const string& name, string& interpreter)
-{
-    ifstream file(name);
-
-    if (!file.is_open())
-        return false;
-
-    string first_line;
-    getline(file, first_line);
-
-    file.close();
-
-    if (first_line.rfind("#!", 0) != 0)
-        return false;
-
-    interpreter = first_line.substr(2);
-
-    return true;
-}
-
 int Shell::exec_and_return(int argc, char** argv)
 {
     if (is_builtin(argv[0]))
@@ -594,48 +574,9 @@ int Shell::exec_and_return(int argc, char** argv)
         return WIFEXITED(status) ? WEXITSTATUS(status) : 1;
     }
 
-    string interpreter;
-    if (!is_script(argv[0], interpreter))
-    {
-        cerr << argv[0] << ": command not found\n";
-        return EXIT_FAILURE;
-    }
+    cerr << argv[0] << ": command not found\n";
 
-    if (access(argv[0], X_OK) != 0)
-    {
-        cerr << name << ": ";
-        perror(argv[0]);
-        return EXIT_FAILURE;
-    }
-
-    if (!is_executable(interpreter))
-    {
-        cerr << argv[0] << ": interpreter not found\n";
-        return EXIT_FAILURE;
-    }
-
-    pid_t pid = fork();
-
-    if (pid == 0)
-    {
-        vector<char*> new_argv;
-
-        new_argv.push_back(const_cast<char*>(interpreter.c_str()));
-
-        for (int i = 0; i < argc; i++)
-            new_argv.push_back(argv[i]);
-
-        new_argv.push_back(nullptr);
-
-        execvp(new_argv[0], new_argv.data());
-        cerr << name << ": script exec and return failed\n";
-        exit(EXIT_FAILURE);
-    }
-
-    int status;
-    wait(&status);
-
-    return WIFEXITED(status) ? WEXITSTATUS(status) : 1;
+    return EXIT_FAILURE;
 }
 
 void Shell::exec_and_exit(int argc, char** argv)
@@ -650,37 +591,8 @@ void Shell::exec_and_exit(int argc, char** argv)
         exit(EXIT_FAILURE);
     }
 
-    string interpreter;
-    if (!is_script(argv[0], interpreter))
-    {
-        cerr << argv[0] << ": command not found\n";
-        exit(EXIT_FAILURE);
-    }
+    cerr << argv[0] << ": command not found\n";
 
-    if (access(argv[0], X_OK) != 0)
-    {
-        cerr << name << ": ";
-        perror(argv[0]);
-        exit(EXIT_FAILURE);
-    }
-
-    if (!is_executable(interpreter))
-    {
-        cerr << argv[0] << ": interpreter not found\n";
-        exit(EXIT_FAILURE);
-    }
-
-    vector<char*> new_argv;
-
-    new_argv.push_back(const_cast<char*>(interpreter.c_str()));
-
-    for (int i = 0; i < argc; i++)
-        new_argv.push_back(argv[i]);
-
-    new_argv.push_back(nullptr);
-
-    execvp(new_argv[0], new_argv.data());
-    cerr << name << ": script exec and exit failed\n";
     exit(EXIT_FAILURE);
 }
 
@@ -821,7 +733,7 @@ int Shell::__history(int argc, char** argv)
     {
         int max_size = to_string(history.size()).size();
 
-        for (int i = 0; i < history.size(); i++)
+        for (size_t i = 0; i < history.size(); i++)
         {
             string num = to_string(history.size() - i);
             num = string(max_size - num.size(), ' ') + num;

@@ -32,7 +32,7 @@ struct Shell
 
     void sync_vars();
     void add_history(std::string str);
-    std::string get_history(int index);
+    std::string get_history(size_t index);
     void prompt();
     void init();
 
@@ -48,7 +48,6 @@ struct Shell
 
     bool is_builtin(const std::string& name);
     bool is_executable(const std::string& name);
-    bool is_script(const std::string& name, std::string& interpreter);
     int exec_and_return(int argc, char** argv);
     void exec_and_exit(int argc, char** argv);
 

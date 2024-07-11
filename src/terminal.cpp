@@ -45,7 +45,7 @@ size_t get_cursor()
         return 0;
 
     char buf[32];
-    int i = 0;
+    size_t i = 0;
 
     while (i < sizeof(buf) - 1)
     {
