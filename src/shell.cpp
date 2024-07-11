@@ -321,50 +321,53 @@ void Shell::sub_commands(AST_ptr& tree)
     {
         for (auto& child : tree->children)
             sub_commands(child);
+
+        return;
     }
-    else
+
+    vector<AST_ptr> new_children;
+
+    for (const auto& word : tree->children)
     {
-        vector<AST_ptr> new_children;
+        vector<AST_ptr> new_words = expand_word(word);
 
-        for (const auto& word : tree->children)
-        {
-            vector<AST_ptr> new_words = expand_word(word);
-
-            new_children.insert(new_children.end(), make_move_iterator(new_words.begin()), make_move_iterator(new_words.end()));
-        }
-
-        tree->children = move(new_children);
-
-        for (const auto& word : tree->children)
-        {
-            for (const auto& reg : word->children)
-                word->data += reg->data;
-
-            word->children.clear();
-        }
-
-        if (!tree->children.empty())
-        {
-            string alias;
-
-            if (aliases.get(tree->children[0]->data, alias))
-            {
-                istringstream iss(alias);
-                vector<string> words;
-                string word;
-
-                while (iss >> word)
-                    words.push_back(word);
-
-                tree->children.erase(tree->children.begin());
-
-                for (size_t i = 0; i < words.size(); i++)
-                    tree->children.insert(tree->children.begin() + i, make_unique<AST>(AST::WORD, words[i]));
-            }
-
-            tree->data = tree->children[0]->data;
-        }
+        new_children.insert(new_children.end(), make_move_iterator(new_words.begin()), make_move_iterator(new_words.end()));
     }
+
+    tree->children = move(new_children);
+
+    if (tree->children.empty())
+        return;
+
+    for (const auto& word : tree->children)
+    {
+        for (const auto& reg : word->children)
+            word->data += reg->data;
+
+        word->children.clear();
+    }
+
+    unordered_set<string> expanded;
+    string expansion;
+    string cmd = tree->children[0]->data;
+
+    while (aliases.get(cmd, expansion) && expanded.find(cmd) == expanded.end())
+    {
+        expanded.insert(cmd);
+
+        tree->children.erase(tree->children.begin());
+
+        istringstream iss(expansion);
+        string word;
+        size_t i = 0;
+
+        while (iss >> word)
+            tree->children.insert(tree->children.begin() + i++, make_unique<AST>(AST::WORD, word));
+
+        cmd = tree->children[0]->data;
+    }
+
+    tree->data = cmd;
 }
 
 int Shell::execute_tree(const AST_ptr& tree)
