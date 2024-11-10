@@ -1,2 +1,5 @@
 /.vscode
 sh
+glob
+init
+prompt
